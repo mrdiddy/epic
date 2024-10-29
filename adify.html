@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Now Playing</title> <!-- Change this to a more general title -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 10px 0;
+        }
+        .playlist {
+            margin-top: 20px;
+        }
+        .track {
+            margin: 10px 0;
+        }
+        .play-button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #progressContainer {
+            margin: 10px 0;
+        }
+    </style>
+    <audio id="audioPlayer"></audio>
+</head>
+<body>
+
+    <header>
+        <h1 id="nowPlaying">Now Playing</h1> <!-- This is just for display on the page -->
+    </header>
+
+    <main>
+        <section class="playlist">
+            <h2>Your Favorite Tracks</h2>
+            <div id="trackList"></div>
+            <button id="playAllButton" class="play-button">Play All</button>
+            <button id="skipButton" class="play-button">Skip</button>
+            <button id="rewindButton" class="play-button">Rewind</button>
+            <div id="progressContainer">
+                <input type="range" id="progressBar" value="0" step="1" min="0">
+                <span id="currentTime">0:00</span> / <span id="duration">0:00</span>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2dasdasdasdp</p>
+    </footer>
+
+    <script>
+        const audioPlayer = document.getElementById('audioPlayer');
+        const trackListElement = document.getElementById('trackList');
+        const progressBar = document.getElementById('progressBar');
+        const currentTimeDisplay = document.getElementById('currentTime');
+        const durationDisplay = document.getElementById('duration');
+        const nowPlaying = document.getElementById('nowPlaying');
+
+        const trackList = [
+            'BedChem.mp3',
+            'BIRDSOFAFEATHER.mp3',
+            'cardigan.mp3',
+            'DieWithASmile.mp3',
+            'Espresso.mp3',
+            'MoonLitFloor.mp3',
+            'PleasePleasePlease.mp3',
+            'pocketlocket.mp3',
+            'rahtahtah.mp3',
+            'seeyouagain.mp3',
+            'ThickOfIt.mp3',
+            'YouBelongWithMe.mp3'
+        ];
+
+        let currentTrackIndex = 0;
+
+        function createTrackElements() {
+            trackList.forEach(song => {
+                const trackName = song.replace('.mp3', ''); // Remove the .mp3 extension
+                const trackDiv = document.createElement('div');
+                trackDiv.classList.add('track');
+                trackDiv.innerHTML = `<span class="track-name">${trackName}</span>`;
+                trackListElement.appendChild(trackDiv);
+            });
+        }
+
+        function updateProgressBar() {
+            const { currentTime, duration } = audioPlayer;
+            progressBar.max = duration || 0;
+            progressBar.value = currentTime;
+            currentTimeDisplay.textContent = formatTime(currentTime);
+            durationDisplay.textContent = formatTime(duration);
+
+            // Update media session metadata for control center
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: trackList[currentTrackIndex].replace('.mp3', ''), // Current track title
+                    artist: 'Your Artist Name', // Optional
+                    album: 'Your Album Name' // Optional
+                });
+                nowPlaying.textContent = `Now Playing: ${trackList[currentTrackIndex].replace('.mp3', '')}`;
+            }
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes}:${secs < 10 ? '0' + secs : secs}`;
+        }
+
+        function playAllTracks() {
+            playTrack(currentTrackIndex);
+        }
+
+        function playTrack(index) {
+            if (index < trackList.length) {
+                audioPlayer.src = `../songs/${trackList[index]}`;
+                audioPlayer.play();
+            }
+        }
+
+        function skipTrack() {
+            if (currentTrackIndex < trackList.length - 1) {
+                currentTrackIndex++;
+                playTrack(currentTrackIndex);
+            }
+        }
+
+        function rewindTrack() {
+            if (currentTrackIndex > 0) {
+                currentTrackIndex--;
+                playTrack(currentTrackIndex);
+            }
+        }
+
+        audioPlayer.addEventListener('ended', skipTrack);
+        audioPlayer.addEventListener('timeupdate', updateProgressBar);
+
+        createTrackElements();
+
+        document.getElementById('playAllButton').addEventListener('click', playAllTracks);
+        document.getElementById('skipButton').addEventListener('click', skipTrack);
+        document.getElementById('rewindButton').addEventListener('click', rewindTrack);
+        progressBar.addEventListener('input', () => {
+            audioPlayer.currentTime = progressBar.value;
+        });
+    </script>
+</body>
+</html>
